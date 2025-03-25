@@ -6,6 +6,8 @@ import { auth, signOut } from "./firebase";
 import "./App.css";
 import "./assets/pages/FeaturesPage.css";
 import Sos from "./assets/pages/Sos";
+import MapOperationsPage from "./assets/pages/MapOperationsPage";
+import CommunityPage from "./assets/pages/CommunityPage";
 function AppWrapper() {
   return (
     <Router>
@@ -323,6 +325,8 @@ function App() {
           />
         } />
         <Route path="/sos" element={<Sos />} />
+        <Route path="/MapOperationsPage" element={<MapOperationsPage />} />
+        <Route path="/CommunityPage" element={<CommunityPage />} />
       </Routes>
     </div>
   );

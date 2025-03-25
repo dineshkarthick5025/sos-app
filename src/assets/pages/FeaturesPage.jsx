@@ -19,7 +19,7 @@ const FeaturesPage = () => {
       description: "Track your route in real time.",
       details: "Our advanced GPS tracking provides real-time route monitoring with predictive analysis of potential risks along your path.",
       icon: <FaRoute className="feature-icon" />,
-      link: "/features/route-monitoring"
+      link: "/MapOperationsPage"
     },
     { 
       title: "Threat Detection", 
@@ -54,7 +54,7 @@ const FeaturesPage = () => {
       description: "Connect with local helpers.",
       details: "Our network of verified community volunteers can provide virtual or physical accompaniment when needed.",
       icon: <FaUsers className="feature-icon" />,
-      link: "/features/community-support"
+      link: "/CommunityPage"
     },
     { 
       title: "Night Security", 
