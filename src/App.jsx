@@ -6,8 +6,9 @@ import { auth, signOut } from "./firebase";
 import "./App.css";
 import "./assets/pages/FeaturesPage.css";
 import Sos from "./assets/pages/Sos";
-import MapOperationsPage from "./assets/pages/MapOperationsPage";
+import MapOperationsPage from "./assets/pages/Map";
 import CommunityPage from "./assets/pages/CommunityPage";
+import Chatbot from "./assets/pages/Chatbot";
 function AppWrapper() {
   return (
     <Router>
@@ -327,9 +328,11 @@ function App() {
         <Route path="/sos" element={<Sos />} />
         <Route path="/MapOperationsPage" element={<MapOperationsPage />} />
         <Route path="/CommunityPage" element={<CommunityPage />} />
+        <Route path="/Chatbot" element={<Chatbot />} />
       </Routes>
     </div>
   );
 }
 
 export default AppWrapper;
+

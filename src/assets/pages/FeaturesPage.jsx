@@ -68,7 +68,7 @@ const FeaturesPage = () => {
       description: "Automated security assistance.",
       details: "Our AI assistant can detect distress patterns in your voice or movement and trigger appropriate safety protocols.",
       icon: <FaRobot className="feature-icon" />,
-      link: "/features/ai-security"
+      link: "/Chatbot"
     }
   ];
 
