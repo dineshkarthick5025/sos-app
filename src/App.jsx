@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react
 import Login from "./assets/pages/Login";
 import FeaturesPage from "./assets/pages/FeaturesPage";
 import { auth, signOut } from "./firebase";
-import "./App.css";
+import "./ap.css";
 import "./assets/pages/FeaturesPage.css";
 import Sos from "./assets/pages/Sos";
-import MapOperationsPage from "./assets/pages/Map";
+import Map from "./assets/pages/Map";
 import CommunityPage from "./assets/pages/CommunityPage";
 import Chatbot from "./assets/pages/Chatbot";
 function AppWrapper() {
@@ -23,55 +23,89 @@ function HomePage({ features, activeFeature, setActiveFeature, user, handleLogou
   return (
     <>
       {/* Navigation */}
-      <header>
-        <div className="container">
-          <nav className="navbar">
-            <div className="logo">
-              <span className="logo-text">EmPower Her</span>
-            </div>
+      {/* Navigation */}
+<header>
+  <div className="container">
+    <nav className="navbar">
+      <div className="logo">
+        <span className="logo-text">EmPower Her</span>
+      </div>
 
-            <div className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <div className={`hamburger ${isMenuOpen ? "active" : ""}`}>
-                <span></span>
-                <span></span>
-                <span></span>
+      <div className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <div className={`hamburger ${isMenuOpen ? "active" : ""}`}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <ul className={`nav-links ${isMenuOpen ? "active" : ""}`}>
+        <li><Link to="/features" onClick={() => setIsMenuOpen(false)}>Features</Link></li>
+        <li><a href="#about" onClick={() => setIsMenuOpen(false)}>About</a></li>
+        <li><a href="#download" onClick={() => setIsMenuOpen(false)}>Download</a></li>
+        <li><a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a></li>
+        
+        {/* Mobile-only CTA buttons */}
+        <li className="mobile-cta-buttons">
+          {user ? (
+            <div className="user-profile">
+              <div className="profile-dropdown">
+                <span className="profile-name">
+                  {user.displayName || user.email.split('@')[0]}
+                  {user.photoURL && (
+                    <img 
+                      src={user.photoURL} 
+                      alt="Profile" 
+                      className="profile-pic"
+                    />
+                  )}
+                </span>
+                <div className="dropdown-content">
+                  <button onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }} className="dropdown-item">Logout</button>
+                </div>
               </div>
             </div>
-
-            <ul className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-              <li><Link to="/features" onClick={() => setIsMenuOpen(false)}>Features</Link></li>
-              <li><a href="#about" onClick={() => setIsMenuOpen(false)}>About</a></li>
-              <li><a href="#download" onClick={() => setIsMenuOpen(false)}>Download</a></li>
-              <li><a href="#contact" onClick={() => setIsMenuOpen(false)}>Contact</a></li>
-            </ul>
-
-            <div className="cta-buttons">
-              {user ? (
-                <div className="user-profile">
-                  <div className="profile-dropdown">
-                    <span className="profile-name">
-                      {user.displayName || user.email.split('@')[0]}
-                      {user.photoURL && (
-                        <img 
-                          src={user.photoURL} 
-                          alt="Profile" 
-                          className="profile-pic"
-                        />
-                      )}
-                    </span>
-                    <div className="dropdown-content">
-                      <button onClick={handleLogout} className="dropdown-item">Logout</button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <Link to="/login"><button className="btn btn-outline">Log in</button></Link>
-              )}
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                <button className="btn btn-outline">Log in</button>
+              </Link>
               <button className="btn btn-primary">Download</button>
+            </>
+          )}
+        </li>
+      </ul>
+
+      <div className="cta-buttons">
+        {user ? (
+          <div className="user-profile">
+            <div className="profile-dropdown">
+              <span className="profile-name">
+                {user.displayName || user.email.split('@')[0]}
+                {user.photoURL && (
+                  <img 
+                    src={user.photoURL} 
+                    alt="Profile" 
+                    className="profile-pic"
+                  />
+                )}
+              </span>
+              <div className="dropdown-content">
+                <button onClick={handleLogout} className="dropdown-item">Logout</button>
+              </div>
             </div>
-          </nav>
-        </div>
-      </header>
+          </div>
+        ) : (
+          <Link to="/login"><button className="btn btn-outline">Log in</button></Link>
+        )}
+        <button className="btn btn-primary">Download</button>
+      </div>
+    </nav>
+  </div>
+</header>
 
       {/* Hero Section */}
       <section className="hero">
@@ -81,7 +115,7 @@ function HomePage({ features, activeFeature, setActiveFeature, user, handleLogou
               <h1 className="title">Safety First, Always</h1>
               <p className="subtitle">Empowering women with smart technology for safer mobility and peace of mind.</p>
               <div className="hero-buttons">
-                <button onClick={() => navigate('/features')} className="btn btn-primary">Get Started</button>
+              <button onClick={() => navigate('/features')} className="btn btn-outline">Get started</button>
                 <button className="btn btn-outline">Learn More</button>
               </div>
             </div>
@@ -326,7 +360,7 @@ function App() {
           />
         } />
         <Route path="/sos" element={<Sos />} />
-        <Route path="/MapOperationsPage" element={<MapOperationsPage />} />
+        <Route path="/MapOperationsPage" element={<Map />} />
         <Route path="/CommunityPage" element={<CommunityPage />} />
         <Route path="/Chatbot" element={<Chatbot />} />
       </Routes>

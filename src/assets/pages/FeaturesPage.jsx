@@ -22,18 +22,11 @@ const FeaturesPage = () => {
       link: "/MapOperationsPage"
     },
     { 
-      title: "Threat Detection", 
-      description: "AI-powered safety alerts.",
-      details: "Machine learning algorithms analyze environmental factors and user reports to detect potential threats before they occur.",
-      icon: <FaBell className="feature-icon" />,
-      link: "/features/threat-detection"
-    },
-    { 
       title: "Hotspot Mapping", 
       description: "Identify high-risk areas.",
       details: "Community-reported data combined with historical incident reports create dynamic heatmaps of areas to avoid.",
       icon: <FaMapMarkedAlt className="feature-icon" />,
-      link: "/features/hotspot-mapping"
+      link: "/MapOperationsPage"
     },
     { 
       title: "Emergency Calling", 
@@ -47,7 +40,14 @@ const FeaturesPage = () => {
       description: "Locate verified safe places nearby.",
       details: "Find verified safe locations including police stations, hospitals, and partner businesses that provide immediate assistance.",
       icon: <FaShieldAlt className="feature-icon" />,
-      link: "/features/safe-spaces"
+      link: "/MapOperationsPage"
+    },
+    { 
+      title: "AI-Powered Assistance", 
+      description: "Automated security assistance.",
+      details: "Our AI assistant can detect distress patterns in your voice or movement and trigger appropriate safety protocols.",
+      icon: <FaRobot className="feature-icon" />,
+      link: "/Chatbot"
     },
     { 
       title: "Community Support", 
@@ -61,14 +61,14 @@ const FeaturesPage = () => {
       description: "Enhanced night travel safety.",
       details: "Specialized night mode with increased monitoring frequency and automatic check-ins during late hours.",
       icon: <FaMoon className="feature-icon" />,
-      link: "/features/night-security"
+      link: "/MapOperationsPage"
     },
     { 
-      title: "AI-Powered Security", 
-      description: "Automated security assistance.",
-      details: "Our AI assistant can detect distress patterns in your voice or movement and trigger appropriate safety protocols.",
-      icon: <FaRobot className="feature-icon" />,
-      link: "/Chatbot"
+      title: "Threat Detection", 
+      description: "AI-powered safety alerts.",
+      details: "Machine learning algorithms analyze environmental factors and user reports to detect potential threats before they occur.",
+      icon: <FaBell className="feature-icon" />,
+      link: "/MapOperationsPage"
     }
   ];
 
@@ -77,7 +77,7 @@ const FeaturesPage = () => {
       {/* Navigation */}
       <header className="page-header">
         <div className="container">
-          <nav className="navbar">
+          <nav className="Navbar">
             <div className="logo">
               <Link to="/" className="logo-text">EmPower Her</Link>
             </div>

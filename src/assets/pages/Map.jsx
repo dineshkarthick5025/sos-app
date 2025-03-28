@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleMap, LoadScript, Marker, DirectionsRenderer, Circle } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, DirectionsRenderer, Circle, Polyline } from '@react-google-maps/api';
 import './Map.css';
 
 const Map = () => {
@@ -16,12 +16,18 @@ const Map = () => {
   const [routeMode, setRouteMode] = useState(false);
   const [sourceInput, setSourceInput] = useState('');
   const [destinationInput, setDestinationInput] = useState('');
+  const [sourceSuggestions, setSourceSuggestions] = useState([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
   const [autocompleteService, setAutocompleteService] = useState(null);
   const [geocoder, setGeocoder] = useState(null);
   const [placesService, setPlacesService] = useState(null);
   const [womenPlaces, setWomenPlaces] = useState([]);
   const [showWomenPlaces, setShowWomenPlaces] = useState(false);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
+  const [isFindingRoute, setIsFindingRoute] = useState(false);
+  const [routeInstructions, setRouteInstructions] = useState(null);
+  const [routePath, setRoutePath] = useState([]);
+  const [highlightedCrimes, setHighlightedCrimes] = useState([]);
   const mapRef = useRef(null);
 
   const containerStyle = {
@@ -49,7 +55,10 @@ const Map = () => {
       { lat: 11.0168, lng: 76.9558, type: 'Theft', severity: 'medium' },
       { lat: 9.9252, lng: 78.1198, type: 'Assault', severity: 'high' },
       { lat: 10.7905, lng: 78.7047, type: 'Burglary', severity: 'medium' },
-      { lat: 8.7139, lng: 77.7567, type: 'Vandalism', severity: 'low' }
+      { lat: 8.7139, lng: 77.7567, type: 'Vandalism', severity: 'low' },
+      { lat: 13.0604, lng: 80.2494, type: 'Harassment', severity: 'high' },
+      { lat: 13.0391, lng: 80.2123, type: 'Pickpocketing', severity: 'medium' },
+      { lat: 13.0657, lng: 80.2609, type: 'Snatching', severity: 'high' }
     ];
     setCrimeData(tamilNaduCrimeData);
 
@@ -104,6 +113,57 @@ const Map = () => {
     );
   };
 
+  const handleSourceInputChange = (value) => {
+    setSourceInput(value);
+    if (value === "My Location") {
+      if (currentLocation && geocoder) {
+        geocoder.geocode({ location: currentLocation }, (results) => {
+          if (results[0]) {
+            setSourceInput(results[0].formatted_address);
+          }
+        });
+      }
+      setSourceSuggestions([]);
+      return;
+    }
+    
+    if (!value.trim() || !autocompleteService) {
+      setSourceSuggestions([]);
+      return;
+    }
+    
+    autocompleteService.getPlacePredictions(
+      { input: value, componentRestrictions: { country: 'in' } },
+      (predictions, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+          setSourceSuggestions(predictions);
+        } else {
+          setSourceSuggestions([]);
+        }
+      }
+    );
+  };
+
+  const handleDestinationInputChange = (value) => {
+    setDestinationInput(value);
+    
+    if (!value.trim() || !autocompleteService) {
+      setDestinationSuggestions([]);
+      return;
+    }
+    
+    autocompleteService.getPlacePredictions(
+      { input: value, componentRestrictions: { country: 'in' } },
+      (predictions, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+          setDestinationSuggestions(predictions);
+        } else {
+          setDestinationSuggestions([]);
+        }
+      }
+    );
+  };
+
   const handlePlaceSelect = (placeId, isDestination = false) => {
     if (!placesService) return;
     
@@ -117,6 +177,7 @@ const Map = () => {
         if (isDestination) {
           setDestination(location);
           setDestinationInput(place.formatted_address);
+          setDestinationSuggestions([]);
           if (mapRef.current) {
             mapRef.current.panTo(location);
           }
@@ -142,30 +203,46 @@ const Map = () => {
       return;
     }
 
+    setIsFindingRoute(true);
+    setSafestRoute(null);
+    setRouteInstructions(null);
+    setRoutePath([]);
+    setHighlightedCrimes([]);
+
     const directionsService = new window.google.maps.DirectionsService();
     
     // Determine origin (either current location or entered address)
-    const origin = sourceInput === "My Location" && currentLocation ? 
-      new window.google.maps.LatLng(currentLocation.lat, currentLocation.lng) : 
-      sourceInput;
+    let origin;
+    if (sourceInput === "My Location" && currentLocation) {
+      origin = new window.google.maps.LatLng(currentLocation.lat, currentLocation.lng);
+    } else {
+      origin = sourceInput;
+    }
     
     // Determine destination (either clicked location or entered address)
-    const destinationPoint = destination ? 
-      new window.google.maps.LatLng(destination.lat, destination.lng) : 
-      destinationInput;
+    let destinationPoint;
+    if (destination) {
+      destinationPoint = new window.google.maps.LatLng(destination.lat, destination.lng);
+    } else {
+      destinationPoint = destinationInput;
+    }
     
     directionsService.route(
       {
         origin,
         destination: destinationPoint,
         travelMode: window.google.maps.TravelMode.WALKING,
-        provideRouteAlternatives: true
+        provideRouteAlternatives: true,
+        avoidHighways: true,
+        avoidTolls: true
       },
       (result, status) => {
         if (status === window.google.maps.DirectionsStatus.OK) {
           const routesWithSafetyScores = result.routes.map(route => {
             const path = route.overview_path;
             let safetyScore = 0;
+            let crimeCount = 0;
+            const crimesAlongRoute = [];
             
             // Calculate safety score based on nearby crimes
             path.forEach(point => {
@@ -177,14 +254,29 @@ const Map = () => {
                 if (distance < 500) { // 500m radius
                   safetyScore += crime.severity === 'high' ? 3 : 
                                crime.severity === 'medium' ? 2 : 1;
+                  crimeCount++;
+                  if (!crimesAlongRoute.some(c => c.lat === crime.lat && c.lng === crime.lng)) {
+                    crimesAlongRoute.push(crime);
+                  }
                 }
               });
             });
             
+            // Calculate route length in km
+            const distanceKm = route.legs[0].distance.value / 1000;
+            
+            // Calculate safety score per km
+            const normalizedScore = distanceKm > 0 ? (safetyScore / distanceKm) : 0;
+            
             return { 
               route, 
-              safetyScore, 
-              distance: route.legs[0].distance.value 
+              safetyScore: normalizedScore,
+              crimeCount,
+              distance: route.legs[0].distance.value,
+              duration: route.legs[0].duration.value,
+              steps: route.legs[0].steps,
+              path: path,
+              crimesAlongRoute
             };
           });
           
@@ -195,10 +287,36 @@ const Map = () => {
           );
           
           setSafestRoute(safest.route);
+          setRoutePath(safest.path);
+          setHighlightedCrimes(safest.crimesAlongRoute);
+          
+          // Generate route instructions
+          const instructions = {
+            distance: (safest.distance / 1000).toFixed(1) + ' km',
+            duration: Math.ceil(safest.duration / 60) + ' mins',
+            crimeCount: safest.crimeCount,
+            steps: safest.steps.map(step => ({
+              instruction: step.instructions,
+              distance: step.distance.text,
+              duration: step.duration.text
+            }))
+          };
+          
+          setRouteInstructions(instructions);
+          
+          // Zoom to show the entire route
+          if (mapRef.current) {
+            const bounds = new window.google.maps.LatLngBounds();
+            safest.route.overview_path.forEach(point => {
+              bounds.extend(point);
+            });
+            mapRef.current.fitBounds(bounds);
+          }
         } else {
           console.error(`Error fetching directions: ${status}`);
           alert("Could not find route. Please check your locations.");
         }
+        setIsFindingRoute(false);
       }
     );
   };
@@ -348,6 +466,9 @@ const Map = () => {
     setSafestRoute(null);
     setDestination(null);
     setDestinationInput('');
+    setRouteInstructions(null);
+    setRoutePath([]);
+    setHighlightedCrimes([]);
   };
 
   const clearWomenPlaces = () => {
@@ -357,7 +478,7 @@ const Map = () => {
 
   return (
     <div className="map-container">
-      <nav className="navbar">
+      <nav className="Navbar">
         <div className="navbar-left">
           <button className="hamburger" onClick={toggleMenu}>
             ☰
@@ -513,25 +634,33 @@ const Map = () => {
                 <input
                   type="text"
                   value={sourceInput}
-                  onChange={(e) => setSourceInput(e.target.value)}
+                  onChange={(e) => handleSourceInputChange(e.target.value)}
                   placeholder="Enter source or use your location"
                 />
                 {sourceInput !== "My Location" && (
                   <button 
                     className="small-button"
-                    onClick={() => {
-                      setSourceInput("My Location");
-                      if (currentLocation && geocoder) {
-                        geocoder.geocode({ location: currentLocation }, (results) => {
-                          if (results[0]) {
-                            setSourceInput(results[0].formatted_address);
-                          }
-                        });
-                      }
-                    }}
+                    onClick={() => handleSourceInputChange("My Location")}
                   >
                     Use My Location
                   </button>
+                )}
+                {sourceSuggestions.length > 0 && (
+                  <div className="search-results">
+                    {sourceSuggestions.map((result) => (
+                      <div 
+                        key={result.place_id}
+                        className="search-result-item"
+                        onClick={() => {
+                          handlePlaceSelect(result.place_id);
+                          setSourceInput(result.description);
+                          setSourceSuggestions([]);
+                        }}
+                      >
+                        {result.description}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -541,7 +670,7 @@ const Map = () => {
                 <input
                   type="text"
                   value={destinationInput}
-                  onChange={(e) => setDestinationInput(e.target.value)}
+                  onChange={(e) => handleDestinationInputChange(e.target.value)}
                   placeholder="Click on map or enter destination"
                 />
                 {destinationInput && (
@@ -550,10 +679,28 @@ const Map = () => {
                     onClick={() => {
                       setDestinationInput('');
                       setDestination(null);
+                      setDestinationSuggestions([]);
                     }}
                   >
                     Clear
                   </button>
+                )}
+                {destinationSuggestions.length > 0 && (
+                  <div className="search-results">
+                    {destinationSuggestions.map((result) => (
+                      <div 
+                        key={result.place_id}
+                        className="search-result-item"
+                        onClick={() => {
+                          handlePlaceSelect(result.place_id, true);
+                          setDestinationInput(result.description);
+                          setDestinationSuggestions([]);
+                        }}
+                      >
+                        {result.description}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -561,9 +708,9 @@ const Map = () => {
               <button 
                 className="action-button primary"
                 onClick={findSafestRoute}
-                disabled={!sourceInput || (!destinationInput && !destination)}
+                disabled={!sourceInput || (!destinationInput && !destination) || isFindingRoute}
               >
-                Find Safest Route
+                {isFindingRoute ? 'Finding Route...' : 'Find Safest Route'}
               </button>
               <button 
                 className="action-button secondary"
@@ -572,7 +719,40 @@ const Map = () => {
                 Cancel
               </button>
             </div>
-            {destination && (
+            
+            {routeInstructions && (
+              <div className="route-instructions">
+                <h4>Route Summary</h4>
+                <div className="route-stats">
+                  <div>
+                    <span className="stat-label">Distance:</span>
+                    <span className="stat-value">{routeInstructions.distance}</span>
+                  </div>
+                  <div>
+                    <span className="stat-label">Duration:</span>
+                    <span className="stat-value">{routeInstructions.duration}</span>
+                  </div>
+                  <div>
+                    <span className="stat-label">Crime Risk:</span>
+                    <span className="stat-value">{routeInstructions.crimeCount} spots</span>
+                  </div>
+                </div>
+                <h4>Directions</h4>
+                <div className="steps-container">
+                  {routeInstructions.steps.map((step, index) => (
+                    <div key={index} className="step">
+                      <div className="step-number">{index + 1}</div>
+                      <div className="step-content">
+                        <div dangerouslySetInnerHTML={{ __html: step.instruction }} />
+                        <div className="step-distance">{step.distance} ({step.duration})</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {destination && !routeInstructions && (
               <div className="route-instructions">
                 <p>Click on the map to change destination or type an address</p>
               </div>
@@ -648,6 +828,36 @@ const Map = () => {
                 title="Destination"
               />
             )}
+
+            {/* Route Path Line */}
+            {routePath.length > 0 && (
+              <Polyline
+                path={routePath}
+                options={{
+                  strokeColor: "#4285F4",
+                  strokeOpacity: 0.8,
+                  strokeWeight: 6,
+                  geodesic: true,
+                  zIndex: 1
+                }}
+              />
+            )}
+
+            {/* Highlighted Crimes Along Route */}
+            {highlightedCrimes.map((crime, index) => (
+              <Marker
+                key={`highlighted-crime-${index}`}
+                position={{ lat: crime.lat, lng: crime.lng }}
+                icon={{
+                  ...circleSymbol,
+                  scale: 8,
+                  fillColor: getCrimeMarkerColor(crime.severity),
+                  strokeColor: "#ffffff"
+                }}
+                title={`${crime.type} (${crime.severity}) - Near route`}
+                zIndex={2}
+              />
+            ))}
 
             {mapLoaded && crimeData.map((crime, index) => (
               <Marker

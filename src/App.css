@@ -112,7 +112,7 @@ header {
 .hamburger {
   width: 30px;
   height: 3px;
-  background-color: #333;
+  background-color: #ffffff;
   margin: 6px 0; /* Increased margin */
   transition: 0.4s;
 }
@@ -929,7 +929,7 @@ footer {
   position: absolute;
   right: 0;
   top: 100%;
-  background-color: #fff;
+  background-color: #ffffff;
   min-width: 120px;
   box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
   border-radius: 4px;
@@ -957,4 +957,65 @@ footer {
 .dropdown-item:hover {
   background-color: #f8f8f8;
   color: #e74c3c;
+}
+
+
+
+
+
+/* Mobile CTA Buttons */
+.mobile-cta-buttons {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  width: 100%;
+}
+
+.mobile-cta-buttons .btn {
+  width: 80%;
+  margin: 10px 0;
+}
+
+/* Show mobile buttons only in mobile menu */
+@media (max-width: 992px) {
+  .mobile-cta-buttons {
+    display: flex;
+  }
+  
+  .cta-buttons {
+    display: none;
+  }
+  
+  /* Adjust user profile in mobile */
+  .mobile-cta-buttons .user-profile {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .mobile-cta-buttons .profile-dropdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .mobile-cta-buttons .dropdown-content {
+    position: relative;
+    box-shadow: none;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .mobile-cta-buttons .dropdown-item {
+    padding: 15px;
+    font-size: 1.1em;
+  }
+}
+
+/* Adjust button spacing in mobile */
+@media (max-width: 480px) {
+  .mobile-cta-buttons .btn {
+    width: 90%;
+  }
 }
