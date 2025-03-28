@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react
 import Login from "./assets/pages/Login";
 import FeaturesPage from "./assets/pages/FeaturesPage";
 import { auth, signOut } from "./firebase";
-import "./ap.css";
+import "./App.css";
 import "./assets/pages/FeaturesPage.css";
 import Sos from "./assets/pages/Sos";
 import Map from "./assets/pages/Map";
