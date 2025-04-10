@@ -10,10 +10,10 @@ export default class Sos extends PureComponent {
     timer: null,
     countdown: 5,
     emergencyContacts: [
-     { name: "Police", number: "100" },
-    { name: "Ambulance", number: "108" },
-     { name: "Fire", number: "101" },
-      { name: "Trusted Contact", number: "+916380405247" } // Your number
+    //  { name: "Police", number: "100" },
+    // { name: "Ambulance", number: "108" },
+    //  { name: "Fire", number: "101" },
+      { name: "Trusted Contact", number: "+919342021944" } // Your number
     ],
     locationInterval: null
   };
